@@ -1,15 +1,15 @@
-"""
-Rekindle — FastAPI application entry point.
-Creates the app, registers middleware, and includes all routers.
-"""
-from app.database.base import Base
-from app.database.session import engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.database.base import Base          # <-- ADD
-from app.database.database import engine    # <-- ADD
+from app.database.base import Base
+from app.database.database import engine
+
+# IMPORTANT: Import models so SQLAlchemy registers them
+from app.models.user import User
+from app.models.journal import Journal
+from app.models.chat import ConversationSession, ChatMessage
+from app.models.emotion import EmotionAnalysis
 
 from app.routers import (
     auth_router,
@@ -24,18 +24,13 @@ from app.routers import (
 settings = get_settings()
 
 
-def create_app() -> FastAPI:
+def create_app():
     app = FastAPI(
         title="Rekindle API",
-        description="AI Life Journal for Dementia and Alzheimer's Patients",
         version="1.0.0",
-        docs_url="/docs",
-        redoc_url="/redoc",
     )
-Base.metadata.create_all(bind=engine)
 
-    # Create database tables on startup
-    Base.metadata.create_all(bind=engine)   # <-- ADD
+    Base.metadata.create_all(bind=engine)
 
     app.add_middleware(
         CORSMiddleware,
@@ -53,9 +48,9 @@ Base.metadata.create_all(bind=engine)
     app.include_router(timeline_router)
     app.include_router(users_router)
 
-    @app.get("/", tags=["Health"])
+    @app.get("/")
     def health():
-        return {"status": "ok", "app": settings.app_name}
+        return {"status": "ok"}
 
     return app
 
