@@ -2,19 +2,29 @@
 Rekindle — FastAPI application entry point.
 Creates the app, registers middleware, and includes all routers.
 """
+from app.database.base import Base
+from app.database.session import engine
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.config import get_settings
+from app.database.base import Base          # <-- ADD
+from app.database.database import engine    # <-- ADD
+
 from app.routers import (
-    auth_router, journals_router, emotions_router,
-    chat_router, dashboard_router, timeline_router, users_router,
+    auth_router,
+    journals_router,
+    emotions_router,
+    chat_router,
+    dashboard_router,
+    timeline_router,
+    users_router,
 )
 
 settings = get_settings()
 
 
 def create_app() -> FastAPI:
-    """Application factory."""
     app = FastAPI(
         title="Rekindle API",
         description="AI Life Journal for Dementia and Alzheimer's Patients",
@@ -22,8 +32,11 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
     )
+Base.metadata.create_all(bind=engine)
 
-    # CORS
+    # Create database tables on startup
+    Base.metadata.create_all(bind=engine)   # <-- ADD
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.origins_list,
@@ -32,7 +45,6 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Routers
     app.include_router(auth_router)
     app.include_router(journals_router)
     app.include_router(emotions_router)
