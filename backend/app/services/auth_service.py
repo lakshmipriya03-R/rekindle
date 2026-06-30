@@ -25,8 +25,17 @@ settings = get_settings()
 
 def register_user(payload: UserCreate, db: Session) -> TokenResponse:
     existing = db.query(User).filter(User.email == payload.email).first()
+
     if existing:
         raise ConflictException("An account with this email already exists")
+
+    print("=" * 60)
+    print("REGISTER PAYLOAD")
+    print("Name     :", payload.full_name)
+    print("Email    :", payload.email)
+    print("Password :", repr(payload.password))
+    print("Length   :", len(payload.password))
+    print("=" * 60)
 
     user = User(
         full_name=payload.full_name,
